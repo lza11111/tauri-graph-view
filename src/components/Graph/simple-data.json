@@ -1,0 +1,100 @@
+[
+  {
+    "name": "SampleEvents_Geneva",
+    "type": "MDS Table",
+    "privacyType": "Personal",
+    "platform": "Geneva",
+    "region": "northeurope",
+    "serviceId": "97f96cdc-6c2f-4dea-bcaa-dbfa054dc00f",
+    "path": "MDS.Public.Production.SampleNamespace.SampleEvents",
+    "id": "19977d6d-14b3-4cfc-a58f-37bba7e005c8"
+  },
+  {
+    "id": "CopyActivity3",
+    "name": "CopyActivity3",
+    "type": "CopyActivity",
+    "platform": "ADF",
+    "inputIdList": [
+      "19977d6d-14b3-4cfc-a58f-37bba7e005c8"
+    ]
+  },
+  {
+    "name": "SampleEvents_Kusto",
+    "type": "Table",
+    "privacyType": "Personal",
+    "platform": "Kusto",
+    "region": "westcentralus",
+    "serviceId": "97f96cdc-6c2f-4dea-bcaa-dbfa054dc00f",
+    "path": "https://sampleStore.kusto.windows.net/sample/SampleEvents",
+    "id": "802b7af8-7340-476f-8635-dec0da92dbaf"
+  },
+  {
+    "name": "SampleEvents_#_#_#.ss",
+    "type": "Stream",
+    "privacyType": "Personal",
+    "platform": "Cosmos",
+    "region": "westus2",
+    "serviceId": "97f96cdc-6c2f-4dea-bcaa-dbfa054dc00f",
+    "path": "https://cosmos14.osdinfra.net/cosmos/sampleVC/local/SampleEvents_#_#_#.ss",
+    "id": "50e24485-710c-4d59-be2c-8b4bc611336b"
+  },
+  {
+    "name": "Filtered_SampleEvents_#_#_#.ss",
+    "type": "Stream",
+    "privacyType": "NonPersonal",
+    "platform": "Cosmos",
+    "region": "westus2",
+    "serviceId": "97f96cdc-6c2f-4dea-bcaa-dbfa054dc00f",
+    "path": "https://cosmos14.osdinfra.net/cosmos/sampleVC/local/Filtered_SampleEvents_#_#_#.ss",
+    "id": "1558ec8a-5149-425a-b26a-5ecf26099962"
+  },
+  {
+    "id": "SampleJob",
+    "name": "SampleJob",
+    "type": "Job",
+    "platform": "Cosmos",
+    "serviceId": "97f96cdc-6c2f-4dea-bcaa-dbfa054dc00f",
+    "inputIdList": [
+      "50e24485-710c-4d59-be2c-8b4bc611336b"
+    ],
+    "outputIdList": [
+      "1558ec8a-5149-425a-b26a-5ecf26099962"
+    ]
+  },
+  {
+    "id": "SampleCopyActivity1",
+    "name": "SampleCopyActivity1",
+    "type": "CopyActivity",
+    "platform": "Lens",
+    "inputIdList": [
+      "19977d6d-14b3-4cfc-a58f-37bba7e005c8"
+    ],
+    "outputIdList": [
+      "802b7af8-7340-476f-8635-dec0da92dbaf"
+    ]
+  },
+  {
+    "id": "SampleCopyActivity2",
+    "name": "SampleCopyActivity2",
+    "type": "CopyActivity",
+    "platform": "ADF",
+    "inputIdList": [
+      "802b7af8-7340-476f-8635-dec0da92dbaf"
+    ],
+    "outputIdList": [
+      "50e24485-710c-4d59-be2c-8b4bc611336b"
+    ]
+  },
+  {
+    "id": "SampleCopyActivity3",
+    "name": "SampleCopyActivity3",
+    "type": "CopyActivity",
+    "platform": "ADF",
+    "inputIdList": [
+      "802b7af8-7340-476f-8635-dec0da92dbaf"
+    ],
+    "outputIdList": [
+      "50e24485-710c-4d59-be2c-8b4bc611336b"
+    ]
+  }
+]
