@@ -1,16 +1,21 @@
 import dynamic from "next/dynamic";
-import { Header } from "../components/Layout";
+import Router from "next/router";
+import { useEffect } from "react";
+import { Header, Layout } from "../components/Layout";
 
 const DataLineageGraph = dynamic(() => import("../components/Graph"), {
   ssr: false,
 });
 
 function App() {
+  useEffect(() => {
+    Router.push("/data-assets")
+  }, []);
+
   return (
-    <div className="container">
-      <Header />
-      <DataLineageGraph />
-    </div>
+    <Layout>
+      <div>Home</div>
+    </Layout>
   );
 }
 
