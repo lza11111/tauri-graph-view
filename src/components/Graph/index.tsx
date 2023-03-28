@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Graph, Node, Edge, Platform, Cell } from '@antv/x6';
 import { Selection } from '@antv/x6-plugin-selection';
+import { invoke } from '@tauri-apps/api';
+import { SettingOutlined, CompressOutlined, SlidersOutlined, FullscreenOutlined, SearchOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { DATA_LINEAGE_DAG_NODE, embedPadding, NodeType } from './definetion';
-import { createEdge, createGroup, createNode, layout } from './utils';
-import data from './simple-data.json';
+import { createEdge, createGroup, createNode, fitContent, layout } from './utils';
 import styles from './styles.module.scss';
-import { Controls } from './controls';
+import { Controls, ControlsItem, ControlType, IControl } from './controls';
+import { Button, Input, InputRef, RefSelectProps, Select } from 'antd';
+
 
 require('./register');
 
@@ -15,16 +18,25 @@ const excuteAnimate = (graph: Graph, node?: Node) => {
   const setAnimate = (edge: Edge) => {
     edge.attr('line/strokeDasharray', 5);
     edge.attr('line/style/animation', `${styles['running-line']} 30s infinite linear`);
+    edge.attr('line/strokeWidth', 2);
   };
+  const influencedNode: Set<Node> = new Set();
+  const influencedEdge: Set<Edge> = new Set();
   if (node) {
     const searchFunc = (cell: Cell, direction: 'in' | 'out') => {
       if (direction === 'in') {
         graph.getIncomingEdges(cell)?.forEach((edge) => {
+          influencedNode.add(edge.getSourceNode());
+          influencedNode.add(edge.getTargetNode());
+          influencedEdge.add(edge);
           setAnimate(edge);
         });
       }
       if (direction === 'out') {
         graph.getOutgoingEdges(cell)?.forEach((edge) => {
+          influencedNode.add(edge.getSourceNode());
+          influencedNode.add(edge.getTargetNode());
+          influencedEdge.add(edge);
           setAnimate(edge);
         });
       }
@@ -37,17 +49,125 @@ const excuteAnimate = (graph: Graph, node?: Node) => {
     });
   }
 
+  graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).filter(node => !influencedNode.has(node)).forEach((node) => {
+    node.attr('body/opacity', 0.5);
+  });
+
+  graph.getEdges().filter(edge => !influencedEdge.has(edge)).forEach((edge) => {
+    edge.attr('line/opacity', 0.5);
+  });
 };
 
 // 关闭边的动画
 const stopAnimate = (graph: Graph) => {
+  graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).forEach((node) => {
+    node.attr('body/opacity', 1);
+  });
   graph.getEdges().forEach((edge) => {
     edge.attr('line/strokeDasharray', 0);
     edge.attr('line/style/animation', '');
+    edge.attr('line/opacity', 1);
+    edge.attr('line/strokeWidth', 1);
   });
 };
 
-export default function DataLineageGraph() {
+interface ISearchComponentProps<T> {
+  options?: T[];
+  graph: Graph;
+}
+
+function SearchComponent<T>(props: ISearchComponentProps<T>) {
+  const { options, graph } = props;
+  const [isSearching, setSearchState] = useState(false);
+  const inputRef = useRef<InputRef>();
+  const [filterOptions, setFilterOptions] = useState<Record<string, string>>({});
+  const [filterField, setFilterField] = useState<string>();
+  const [filterValue, setFilterValue] = useState<string>();
+
+  useEffect(() => {
+    if (isSearching) {
+      inputRef.current.focus();
+    }
+  }, [isSearching]);
+
+  useEffect(() => {
+    options && setFilterField(Object.keys(options[0])[0]);
+  }, [options]);
+
+  useEffect(() => {
+    if(Object.keys(filterOptions).length > 0){
+      graph.select(Object.entries(filterOptions).reduce<Node[]>((prev, curr) => {
+        return prev.filter((node) => node.getData()[curr[0]].toString().toLowerCase().indexOf(curr[1].toLowerCase()) !== -1)
+      }, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE)));
+    }
+  }, [filterOptions]);
+
+  const selectBefore = useMemo(() => (
+    options && (
+      <Select dropdownMatchSelectWidth={false} value={filterField} onChange={setFilterField}>
+        {Object.keys(options[0]).map((key) => (
+          <Select.Option key={key} value={key}>{key}</Select.Option>
+        ))}
+      </Select>
+    )
+  ), [options, filterField]);
+  return (
+    <ControlsItem onClick={() => !isSearching ? setSearchState(true) : null}>
+      {
+        !isSearching ? <SearchOutlined /> : (
+          <div className={styles['search-body']}>
+            <div className={styles['search-input']}>
+              <SearchOutlined onClick={() => setSearchState(false)} />
+              <Input ref={inputRef} addonBefore={selectBefore} onChange={(e) => setFilterValue(e.target.value)} />
+              <Button type="primary" shape="circle" icon={<PlusOutlined />} onClick={() => {
+                setFilterOptions({
+                  ...filterOptions,
+                  [filterField]: filterValue,
+                })
+              }} />
+            </div>
+            <div className={styles['search-params']}>
+              {
+                Object.entries(filterOptions).map(([key, value]) => (
+                  <div key={key}>
+                    <span>{key}</span>
+                    <span>:</span>
+                    <span>{value}</span>
+                    <DeleteOutlined onClick={() => delete filterOptions[key] && setFilterOptions({
+                      ...filterOptions,
+                    })} />
+                  </div>
+                ))
+              }
+            </div>
+            {/* <Select
+              className={styles.select}
+              ref={inputRef}
+              onBlur={() => setSearchState(false)}
+              onChange={(value) => {
+                excuteAnimate(graph, graph.getCellById(value) as Node);
+                graph.select(value);
+              }}
+              showArrow={false}
+              notFoundContent={null}
+              showSearch
+              options={options} /> */}
+
+
+          </div>
+        )
+      }
+    </ControlsItem>
+
+  );
+}
+
+interface IDataLineageGraphProps {
+  data: any[];
+}
+
+export default function DataLineageGraph(props: IDataLineageGraphProps) {
+  const { data } = props;
   const [graphIns, setGraphIns] = useState<Graph>();
 
   useEffect(() => {
@@ -57,6 +177,9 @@ export default function DataLineageGraph() {
       panning: {
         enabled: true,
         eventTypes: ['leftMouseDown'],
+      },
+      background: {
+        color: '#eee'
       },
       mousewheel: {
         enabled: true,
@@ -109,7 +232,9 @@ export default function DataLineageGraph() {
       },
     });
     graph.on('node:click', ({ node }) => {
-      excuteAnimate(graph, node);
+      if (node.shape === DATA_LINEAGE_DAG_NODE) {
+        excuteAnimate(graph, node);
+      }
     });
     graph.on('blank:click', () => {
       stopAnimate(graph);
@@ -263,18 +388,65 @@ export default function DataLineageGraph() {
       parent.addChild(node);
     });
     layout(graph, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE), graph.getEdges());
-
     setGraphIns(graph);
-
+    fitContent(graph);
     return () => {
       graph.dispose();
     };
-  }, []);
+  }, [data]);
+
+  const bottomRightControls: IControl[] = [{
+    id: 'settings',
+    name: 'Settings',
+    icon: <SettingOutlined />,
+    type: ControlType.Action
+  }, {
+    id: 'scale-to-fit',
+    name: 'Scale to fit',
+    icon: <CompressOutlined />,
+    action: () => {
+      if (!graphIns) {
+        return;
+      }
+      fitContent(graphIns);
+    },
+    type: ControlType.Action,
+  }, {
+    id: 're-layout',
+    name: 'Re-layout',
+    icon: <SlidersOutlined />,
+    action: () => {
+      if (!graphIns) {
+        return;
+      }
+      layout(graphIns, graphIns.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE), graphIns.getEdges());
+    },
+    type: ControlType.Action,
+  }, {
+    id: 'divider2',
+    type: ControlType.Divider
+  }, {
+    id: 'fullscreen',
+    name: 'Fullscreen',
+    icon: <FullscreenOutlined />,
+    action: () => {
+      invoke('toggle_fullscreen');
+    },
+    type: ControlType.Action,
+  }];
+
+  const topRightControls: IControl[] = [{
+    id: 'search',
+    name: 'Serach',
+    component: <SearchComponent graph={graphIns} options={graphIns?.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).map((node) => node.getData())} />,
+    type: ControlType.Action
+  }];
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <div id='container' style={{ width: '100%', height: '100%' }} />
-      <Controls graph={graphIns} />
+      <Controls controls={bottomRightControls} showCollapseButton graph={graphIns} position='bottom-right' />
+      <Controls controls={topRightControls} graph={graphIns} position='top-left' />
     </div>
   );
 }

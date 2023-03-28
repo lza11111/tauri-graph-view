@@ -142,6 +142,7 @@ const getPortsByType = (type: NodeType, nodeId: string) => {
   ];
 };
 
+// auto layout
 export function layout(graph: Graph, nodes: Node[], edges: Edge[]) {
   const g = new dagre.graphlib.Graph({ compound: true });
   const dir = 'LR';
@@ -169,4 +170,18 @@ export function layout(graph: Graph, nodes: Node[], edges: Edge[]) {
       node.position(pos.x, pos.y);
     }
   });
+}
+
+// fit container
+export function fitContent(graph: Graph) {
+  if (!graph) {
+    return;
+  }
+  const zoomOptions = {
+    padding: {
+      left: 10,
+      right: 10,
+    },
+  };
+  graph.zoomToFit(zoomOptions);
 }

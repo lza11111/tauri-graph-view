@@ -1,4 +1,3 @@
-import { TabletFilled } from '@ant-design/icons';
 import DataAssets from '@/assets/icon/data-assets.svg';
 import DataGlossary from '@/assets/icon/data-glossary.svg';
 import DataInsights from '@/assets/icon/data-insights.svg';

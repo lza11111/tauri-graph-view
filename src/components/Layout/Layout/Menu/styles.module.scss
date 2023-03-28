@@ -1,11 +1,13 @@
 .menu-item {
     display: flex;
     align-items: center;
+
     // gap: 8px;
     flex-direction: column;
     justify-content: center;
     min-width: 40px;
     line-height: 16px;
+
     // height: 54px;
 
     .icon {

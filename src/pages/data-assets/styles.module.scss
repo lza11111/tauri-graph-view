@@ -29,7 +29,7 @@
                     font-weight: 700;
                     font-size: 1rem !important;
                     line-height: 1.5rem !important;
-                    color: rgba(55, 65, 81) !important;
+                    color: rgb(55 65 81) !important;
                     overflow-wrap: break-word;
                     white-space: nowrap;
                 }
@@ -46,11 +46,11 @@
                             line-height: 1.25rem !important;
                             text-transform: uppercase;
                             letter-spacing: 0.05em;
-                            color: rgba(111, 117, 144);
+                            color: rgb(111 117 144);
                         }
 
                         .underline {
-                            border-bottom: 1px dashed rgba(111, 117, 144);
+                            border-bottom: 1px dashed rgb(111 117 144);
                         }
                     }
 
@@ -64,7 +64,7 @@
 
         :global {
             .ant-tabs-nav {
-                margin-bottom: 0px !important;
+                margin-bottom: 0 !important;
             }
 
             .ant-tabs-tab:first-child {
@@ -74,11 +74,14 @@
             .ant-tabs-content {
                 height: 100%;
             }
+
             .ant-tabs-tabpane {
                 height: 100%;
             }
+
             .ant-tabs-content-holder {
-                height: 100%;
+                flex-grow: 1;
+                height: 0;
             }
         }
     }

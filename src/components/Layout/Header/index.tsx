@@ -1,6 +1,3 @@
-import { appWindow } from '@/lib/tauri';
-import { Input } from 'antd';
-
 import styles from './styles.module.scss';
 
 interface IHeaderProps {

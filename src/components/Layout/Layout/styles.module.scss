@@ -1,8 +1,10 @@
 .layout {
     height: 100%;
+
     :global(.ant-pro-layout-container){
         height: 100%;
     }
+
     :global(.ant-layout) {
         height: 100%;
     }

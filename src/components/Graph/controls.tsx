@@ -1,96 +1,79 @@
-import { CompressOutlined, DoubleRightOutlined, FullscreenOutlined, SettingOutlined, SlidersOutlined } from '@ant-design/icons';
+import { DoubleRightOutlined } from '@ant-design/icons';
 import { Graph } from '@antv/x6';
-import { layout } from './utils';
+import classnames from 'classnames';
 import styles from './styles.module.scss';
 
-import { DATA_LINEAGE_DAG_NODE } from './definetion';
-import { invoke } from '@tauri-apps/api';
-
-enum ContorlType {
+export enum ControlType {
   Action,
   Divider,
 }
-interface IControl {
+
+export interface IControl {
   id: string;
   name?: string;
+  component?: JSX.Element;
+  /**  If no component, will show icon and apply action. */
   icon?: JSX.Element;
-  type: ContorlType;
+  /**  If no component, will show icon and apply action. */
   action?: () => void;
+  type: ControlType;
 }
+
 function Divider() {
   return (
     <div className={styles['control-divider']} />
   );
 }
 
-export function Controls(props: { graph: Graph; }) {
-  const { graph } = props;
-  const contorls: IControl[] = [{
-    id: 'expend-icon',
-    name: 'Expand',
-    icon: <DoubleRightOutlined />,
-    type: ContorlType.Action
-  }, {
-    id: 'divider1',
-    type: ContorlType.Divider
-  }, {
-    id: 'settings',
-    name: 'Settings',
-    icon: <SettingOutlined />,
-    type: ContorlType.Action
-  }, {
-    id: 'scale-to-fit',
-    name: 'Scale to fit',
-    icon: <CompressOutlined />,
-    type: ContorlType.Action,
-    action: () => {
-      if (!graph) {
-        return;
-      }
-      const zoomOptions = {
-        padding: {
-          left: 10,
-          right: 10,
-        },
-      };
-      graph.zoomToFit(zoomOptions);
+interface IControlsProps {
+  graph: Graph;
+  position: 'top-right' | 'bottom-right' | 'top-left';
+  showCollapseButton?: boolean;
+  controls: IControl[];
+}
+
+interface IControlItemProps {
+  children?: React.ReactNode;
+  onClick?: () => void;
+}
+
+export function ControlsItem(props: IControlItemProps) {
+  const { children, onClick } = props;
+  return (
+    <div className={styles['control-item']} onClick={onClick}>
+      {children}
+    </div>
+  );
+}
+
+export function Controls(props: IControlsProps) {
+  const { showCollapseButton = false, position, controls } = props;
+
+  const renderControls = (controls: IControl[]) => controls.map((ctl) => (
+    ctl.type === ControlType.Action ? ctl.component ? ctl.component : (
+      <div key={ctl.id} className={styles['control-item']} onClick={ctl.action}>
+        {ctl.icon}
+      </div>
+    ) : <Divider key={ctl.id} />
+  ));
+
+  const collapseButtonGroup: IControl[] = [
+    {
+      id: 'expend-icon',
+      name: 'Expand',
+      icon: <DoubleRightOutlined />,
+      type: ControlType.Action
+    }, {
+      id: 'divider1',
+      type: ControlType.Divider
     }
-  }, {
-    id: 're-layout',
-    name: 'Re-layout',
-    icon: <SlidersOutlined />,
-    type: ContorlType.Action,
-    action: () => {
-      if (!graph) {
-        return;
-      }
-      layout(graph, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE), graph.getEdges());
-    }
-  }, {
-    id: 'divider2',
-    type: ContorlType.Divider
-  }, {
-    id: 'fullscreen',
-    name: 'Fullscreen',
-    icon: <FullscreenOutlined />,
-    type: ContorlType.Action,
-    action: () => {
-      invoke('toggle_fullscreen');
-    }
-  }];
+  ];
 
   return (
-    <div className={styles['lineage-control']}>
+    <div className={classnames(styles['lineage-control'], styles[position])}>
       <div className={styles.controls}>
-        {
-          contorls.map((ctl) => (
-            ctl.type === ContorlType.Action ? (
-              <div key={ctl.id} className={styles['control-item']} onClick={ctl.action}>
-                {ctl.icon}
-              </div>
-            ) : <Divider key={ctl.id}/>
-          ))
-        }
+        {showCollapseButton ? renderControls(collapseButtonGroup) : null}
+        {renderControls(controls)}
       </div>
     </div>
   );

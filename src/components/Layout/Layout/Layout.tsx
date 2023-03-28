@@ -1,22 +1,11 @@
 import {
-  CaretDownFilled,
-  DoubleRightOutlined,
-  GithubFilled,
   InfoCircleFilled,
-  LogoutOutlined,
-  PlusCircleFilled,
   QuestionCircleFilled,
-  SearchOutlined,
 } from '@ant-design/icons';
-import type { ProSettings } from '@ant-design/pro-components';
 import {
-  PageContainer,
-  ProCard,
   ProConfigProvider,
   ProLayout,
-  SettingDrawer,
 } from '@ant-design/pro-components';
-import { Button, Divider, Input, Dropdown, Popover, theme } from 'antd';
 import Router from 'next/router';
 import React, { useState } from 'react';
 import MenuItem from './Menu/MenuItem';
@@ -39,7 +28,7 @@ export function Layout(props: React.PropsWithChildren) {
         <ProLayout
           {...defaultProps}
           className={styles.layout}
-          logo={microsoftLogo.src}
+          logo={<img src={microsoftLogo.src} />}
           title={false}
           collapsed={false}
           location={{
@@ -59,7 +48,7 @@ export function Layout(props: React.PropsWithChildren) {
               <QuestionCircleFilled key="QuestionCircleFilled" />,
             ];
           }}
-          menuItemRender={(item, dom) => (
+          menuItemRender={(item) => (
             <div
               onClick={() => {
                 if (item.path === 'data-assets') {
@@ -69,7 +58,6 @@ export function Layout(props: React.PropsWithChildren) {
               }}
             >
               <MenuItem {...item}/>
-              {/* {dom} */}
             </div>
           )}
           collapsedButtonRender={false}
@@ -81,5 +69,5 @@ export function Layout(props: React.PropsWithChildren) {
         </ProLayout>
       </ProConfigProvider>
     </div>
-  )
+  );
 }

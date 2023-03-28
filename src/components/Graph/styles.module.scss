@@ -60,7 +60,8 @@
 }
 
 .platform-group {
-    border: 1px solid #e0e4eb;
+    border: 2px solid #d4dded;
+    background-color: rgb(225 228 234 / 90%);
     border-radius: 5px;
     height: 100%;
     padding: 5px;
@@ -113,9 +114,7 @@
 
 .lineage-control {
     position: absolute;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    background-color: rgb(255,255,255);
+    background-color: rgb(255 255 255);
     z-index: 9;
     box-shadow: rgb(0 0 0 / 12%) 0 9px 32px;
     border-radius: 4px;
@@ -130,10 +129,10 @@
             cursor: pointer;
             border-radius: 0.25rem;
             padding: 0.25rem 0.5rem;
-            color: rgb(55,65,81);
+            color: rgb(55 65 81);
 
             &:hover {
-                color: rgba(82,119,215);
+                color: rgb(82 119 215);
             }
         }
 
@@ -142,6 +141,43 @@
             border-left: 1px solid #e0e4eb;
         }
     }
+}
+
+.bottom-right {
+    bottom: 1.5rem;
+    right: 1.5rem;
+}
+
+.top-right {
+    top: 1.5rem;
+    right: 1.5rem;
+}
+
+.top-left {
+    top: 1.5rem;
+    left: 1.5rem;
+}
+
+.search-body {
+    display: flex;
+    flex-direction: column;
+    .search-input {
+        display: flex;
+        column-gap: 12px;
+        justify-content: center;
+         align-items: center;
+        .select {
+            width: 150px;
+        }
+    }
+    .search-params {
+        display: flex;
+        flex-direction: column;
+        column-gap: 12px;
+        // justify-content: center;
+        // align-items: center;
+    }
+    
 }
 
 :global(.x6-node-selected) {

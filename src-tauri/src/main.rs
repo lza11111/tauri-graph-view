@@ -3,7 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-use tauri::{CustomMenuItem, Menu, MenuItem, Submenu, Runtime, WindowEvent};
+use std::fs;
+
+use tauri::{CustomMenuItem, Menu, Submenu, Runtime, WindowEvent};
 
 #[tauri::command]
 async fn toggle_fullscreen<R: Runtime>(window: tauri::Window<R>) -> Result<(), String> {
@@ -17,8 +19,9 @@ async fn toggle_fullscreen<R: Runtime>(window: tauri::Window<R>) -> Result<(), S
 }
 
 #[tauri::command]
-async fn trigger_something<R: Runtime>(app: tauri::AppHandle<R>, window: tauri::Window<R>) -> Result<(), String> {
-    Ok(())
+fn read_file(file_path: &str) -> Result<String, String> {
+    let contents = fs::read_to_string(file_path).unwrap();
+    Ok(contents)
 }
 
 fn main() {
@@ -26,10 +29,15 @@ fn main() {
         "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
         "--ignore-gpu-blocklist",
       );
+    let open_file_menu = CustomMenuItem::new("load_file".to_string(), "Load File");
+    let file_menu = Submenu::new("File", Menu::new().add_item(open_file_menu));
+
+    let menu = Menu::new().add_submenu(file_menu);
     tauri::Builder::default()
+        .menu(menu)
         .on_menu_event(|event| match event.menu_item_id() {
-            "quit" => {
-                std::process::exit(0);
+            "load_file" => {
+                event.window().emit("load_file", {}).unwrap();
             }
             "close" => {
                 event.window().close().unwrap();
@@ -41,7 +49,7 @@ fn main() {
                 std::thread::sleep(std::time::Duration::from_millis(1));
             }
         })
-        .invoke_handler(tauri::generate_handler![toggle_fullscreen])
+        .invoke_handler(tauri::generate_handler![toggle_fullscreen, read_file])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
