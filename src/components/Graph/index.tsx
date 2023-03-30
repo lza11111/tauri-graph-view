@@ -1,173 +1,22 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Graph, Node, Edge, Platform, Cell } from '@antv/x6';
+import React, { useEffect, useState } from 'react';
+import { Graph } from '@antv/x6';
 import { Selection } from '@antv/x6-plugin-selection';
 import { invoke } from '@tauri-apps/api';
-import { SettingOutlined, CompressOutlined, SlidersOutlined, FullscreenOutlined, SearchOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SettingOutlined, CompressOutlined, SlidersOutlined, FullscreenOutlined, FileOutlined } from '@ant-design/icons';
 import { DATA_LINEAGE_DAG_NODE, embedPadding, NodeType } from './definetion';
-import { createEdge, createGroup, createNode, fitContent, layout } from './utils';
-import styles from './styles.module.scss';
-import { Controls, ControlsItem, ControlType, IControl } from './controls';
-import { Button, Input, InputRef, RefSelectProps, Select } from 'antd';
-
+import { createEdge, createGroup, createNode, excuteAnimate, fitContent, layout, stopAnimate } from './utils';
+import { Controls, ControlType, IControl } from './controls';
+import { SearchComponent } from './search';
 
 require('./register');
 
-// 开启边的运行动画
-const excuteAnimate = (graph: Graph, node?: Node) => {
-  stopAnimate(graph);
-  const setAnimate = (edge: Edge) => {
-    edge.attr('line/strokeDasharray', 5);
-    edge.attr('line/style/animation', `${styles['running-line']} 30s infinite linear`);
-    edge.attr('line/strokeWidth', 2);
-  };
-  const influencedNode: Set<Node> = new Set();
-  const influencedEdge: Set<Edge> = new Set();
-  if (node) {
-    const searchFunc = (cell: Cell, direction: 'in' | 'out') => {
-      if (direction === 'in') {
-        graph.getIncomingEdges(cell)?.forEach((edge) => {
-          influencedNode.add(edge.getSourceNode());
-          influencedNode.add(edge.getTargetNode());
-          influencedEdge.add(edge);
-          setAnimate(edge);
-        });
-      }
-      if (direction === 'out') {
-        graph.getOutgoingEdges(cell)?.forEach((edge) => {
-          influencedNode.add(edge.getSourceNode());
-          influencedNode.add(edge.getTargetNode());
-          influencedEdge.add(edge);
-          setAnimate(edge);
-        });
-      }
-    };
-    graph.searchCell(node, (cell) => searchFunc(cell, 'in'), { incoming: true });
-    graph.searchCell(node, (cell) => searchFunc(cell, 'out'), { outgoing: true });
-  } else {
-    graph.getEdges().forEach((edge) => {
-      setAnimate(edge);
-    });
-  }
-
-  graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).filter(node => !influencedNode.has(node)).forEach((node) => {
-    node.attr('body/opacity', 0.5);
-  });
-
-  graph.getEdges().filter(edge => !influencedEdge.has(edge)).forEach((edge) => {
-    edge.attr('line/opacity', 0.5);
-  });
-};
-
-// 关闭边的动画
-const stopAnimate = (graph: Graph) => {
-  graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).forEach((node) => {
-    node.attr('body/opacity', 1);
-  });
-  graph.getEdges().forEach((edge) => {
-    edge.attr('line/strokeDasharray', 0);
-    edge.attr('line/style/animation', '');
-    edge.attr('line/opacity', 1);
-    edge.attr('line/strokeWidth', 1);
-  });
-};
-
-interface ISearchComponentProps<T> {
-  options?: T[];
-  graph: Graph;
-}
-
-function SearchComponent<T>(props: ISearchComponentProps<T>) {
-  const { options, graph } = props;
-  const [isSearching, setSearchState] = useState(false);
-  const inputRef = useRef<InputRef>();
-  const [filterOptions, setFilterOptions] = useState<Record<string, string>>({});
-  const [filterField, setFilterField] = useState<string>();
-  const [filterValue, setFilterValue] = useState<string>();
-
-  useEffect(() => {
-    if (isSearching) {
-      inputRef.current.focus();
-    }
-  }, [isSearching]);
-
-  useEffect(() => {
-    options && setFilterField(Object.keys(options[0])[0]);
-  }, [options]);
-
-  useEffect(() => {
-    if(Object.keys(filterOptions).length > 0){
-      graph.select(Object.entries(filterOptions).reduce<Node[]>((prev, curr) => {
-        return prev.filter((node) => node.getData()[curr[0]].toString().toLowerCase().indexOf(curr[1].toLowerCase()) !== -1)
-      }, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE)));
-    }
-  }, [filterOptions]);
-
-  const selectBefore = useMemo(() => (
-    options && (
-      <Select dropdownMatchSelectWidth={false} value={filterField} onChange={setFilterField}>
-        {Object.keys(options[0]).map((key) => (
-          <Select.Option key={key} value={key}>{key}</Select.Option>
-        ))}
-      </Select>
-    )
-  ), [options, filterField]);
-  return (
-    <ControlsItem onClick={() => !isSearching ? setSearchState(true) : null}>
-      {
-        !isSearching ? <SearchOutlined /> : (
-          <div className={styles['search-body']}>
-            <div className={styles['search-input']}>
-              <SearchOutlined onClick={() => setSearchState(false)} />
-              <Input ref={inputRef} addonBefore={selectBefore} onChange={(e) => setFilterValue(e.target.value)} />
-              <Button type="primary" shape="circle" icon={<PlusOutlined />} onClick={() => {
-                setFilterOptions({
-                  ...filterOptions,
-                  [filterField]: filterValue,
-                })
-              }} />
-            </div>
-            <div className={styles['search-params']}>
-              {
-                Object.entries(filterOptions).map(([key, value]) => (
-                  <div key={key}>
-                    <span>{key}</span>
-                    <span>:</span>
-                    <span>{value}</span>
-                    <DeleteOutlined onClick={() => delete filterOptions[key] && setFilterOptions({
-                      ...filterOptions,
-                    })} />
-                  </div>
-                ))
-              }
-            </div>
-            {/* <Select
-              className={styles.select}
-              ref={inputRef}
-              onBlur={() => setSearchState(false)}
-              onChange={(value) => {
-                excuteAnimate(graph, graph.getCellById(value) as Node);
-                graph.select(value);
-              }}
-              showArrow={false}
-              notFoundContent={null}
-              showSearch
-              options={options} /> */}
-
-
-          </div>
-        )
-      }
-    </ControlsItem>
-
-  );
-}
-
 interface IDataLineageGraphProps {
   data: any[];
+  onLoadFile: () => void;
 }
 
 export default function DataLineageGraph(props: IDataLineageGraphProps) {
-  const { data } = props;
+  const { data, onLoadFile } = props;
   const [graphIns, setGraphIns] = useState<Graph>();
 
   useEffect(() => {
@@ -199,35 +48,6 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
               strokeWidth: 4,
             },
           },
-        },
-      },
-      connecting: {
-        snap: true,
-        allowBlank: false,
-        allowLoop: false,
-        highlight: true,
-        sourceAnchor: {
-          name: 'left',
-          args: {
-            dx: Platform.IS_SAFARI ? 4 : 8,
-          },
-        },
-        targetAnchor: {
-          name: 'right',
-          args: {
-            dx: Platform.IS_SAFARI ? 4 : -8,
-          },
-        },
-        createEdge() {
-          return graph.createEdge({
-            shape: 'data-processing-curve',
-            attrs: {
-              line: {
-                strokeDasharray: '5 5',
-              },
-            },
-            zIndex: 0,
-          });
         },
       },
     });
@@ -435,18 +255,30 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
     type: ControlType.Action,
   }];
 
-  const topRightControls: IControl[] = [{
+  const topLeftControls: IControl[] = [{
     id: 'search',
     name: 'Serach',
     component: <SearchComponent graph={graphIns} options={graphIns?.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).map((node) => node.getData())} />,
     type: ControlType.Action
   }];
 
+  const topRightControls: IControl[] = [{
+    id: 'load-file',
+    name: 'Load file',
+    icon: <FileOutlined />,
+    type: ControlType.Action,
+    show: () => !window.__TAURI_IPC__,
+    action: () => {
+      onLoadFile();
+    }
+  }];
+
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <div id='container' style={{ width: '100%', height: '100%' }} />
       <Controls controls={bottomRightControls} showCollapseButton graph={graphIns} position='bottom-right' />
-      <Controls controls={topRightControls} graph={graphIns} position='top-left' />
+      <Controls controls={topLeftControls} graph={graphIns} position='top-left' />
+      <Controls controls={topRightControls} graph={graphIns} position='top-right' />
     </div>
   );
 }

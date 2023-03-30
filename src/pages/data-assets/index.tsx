@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@/lib/tauri';
 import dynamic from 'next/dynamic';
-import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { Button, Tabs } from "antd";
+import { listen } from '@tauri-apps/api/event';
+import { Button, Modal, Tabs } from "antd";
 import type { TabsProps } from 'antd';
 import { ArrowLeftOutlined, DatabaseOutlined, TableOutlined } from "@ant-design/icons";
 import classnames from 'classnames';
@@ -12,7 +12,6 @@ import DataAssets from '@/assets/icon/data-assets.svg';
 import sampleData from '@/assets/simple-data.json';
 import styles from './styles.module.scss';
 
-
 const DataLineageGraph = dynamic(() => import('@/components/Graph'), { ssr: false });
 
 export default function DataAssetsHome() {
@@ -20,7 +19,7 @@ export default function DataAssetsHome() {
   useEffect(() => {
     const { open } = require('@tauri-apps/api/dialog');
     const { appConfigDir } = require('@tauri-apps/api/path');
-     let unlisten = listen('load_file', async () => {
+    const unlisten = listen('load_file', async () => {
       const selected = await open({
         filters: [{
           name: 'Json',
@@ -28,7 +27,7 @@ export default function DataAssetsHome() {
         }],
         defaultPath: await appConfigDir(),
       });
-      if(selected) {
+      if (selected) {
         const content: string = await invoke('read_file', { filePath: selected });
         setData(JSON.parse(content));
       }
@@ -38,6 +37,31 @@ export default function DataAssetsHome() {
     };
   }, []);
 
+  const onLoadFile = async () => {
+    if (typeof window === 'undefined') return;
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [
+          {
+            description: "JSON Files",
+            accept: {
+              "application/json": [".json"],
+            },
+          },
+        ],
+      });
+      const file = await fileHandle.getFile();
+      const contents = await file.text();
+      if (contents) {
+        setData(JSON.parse(contents));
+      }
+    } catch (e) {
+      Modal.error({
+        title: 'Error',
+        content: e.message,
+      });
+    }
+  };
   const items: TabsProps['items'] = [
     {
       key: 'overview',
@@ -52,7 +76,7 @@ export default function DataAssetsHome() {
     {
       key: 'lineage',
       label: `Lineage`,
-      children: <DataLineageGraph data={data}/>,
+      children: <DataLineageGraph data={data} onLoadFile={onLoadFile} />,
     },
   ];
 

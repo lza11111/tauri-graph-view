@@ -1,6 +1,7 @@
 import { DoubleRightOutlined } from '@ant-design/icons';
 import { Graph } from '@antv/x6';
 import classnames from 'classnames';
+import { MouseEvent } from 'react';
 import styles from './styles.module.scss';
 
 export enum ControlType {
@@ -17,6 +18,7 @@ export interface IControl {
   /**  If no component, will show icon and apply action. */
   action?: () => void;
   type: ControlType;
+  show?: boolean | (() => boolean);
 }
 
 function Divider() {
@@ -34,7 +36,7 @@ interface IControlsProps {
 
 interface IControlItemProps {
   children?: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e?: MouseEvent) => void;
 }
 
 export function ControlsItem(props: IControlItemProps) {
@@ -50,11 +52,12 @@ export function Controls(props: IControlsProps) {
   const { showCollapseButton = false, position, controls } = props;
 
   const renderControls = (controls: IControl[]) => controls.map((ctl) => (
-    ctl.type === ControlType.Action ? ctl.component ? ctl.component : (
-      <div key={ctl.id} className={styles['control-item']} onClick={ctl.action}>
-        {ctl.icon}
-      </div>
-    ) : <Divider key={ctl.id} />
+    (typeof ctl.show === 'undefined' || typeof ctl.show === 'boolean' && ctl.show === true || typeof ctl.show === 'function' && ctl.show()) 
+    && ctl.type === ControlType.Action ? ctl.component ? ctl.component : (
+        <div key={ctl.id} className={styles['control-item']} onClick={ctl.action}>
+          {ctl.icon}
+        </div>
+      ) : <Divider key={ctl.id} />
   ));
 
   const collapseButtonGroup: IControl[] = [

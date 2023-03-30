@@ -62,10 +62,12 @@ export function DataLineageNode(props: ReactNodeProps) {
 export function PlatformGroupNode(props: ReactNodeProps) {
   const { node } = props;
   const data = node?.getData();
-  const { platform } = data;
-
+  const { platform, color } = data;
+  const customCSS = {
+    '--primary-color': color,
+  };
   return (
-    <div className={styles['platform-group']}>
+    <div className={styles['platform-group']} style={customCSS as React.CSSProperties}>
       <div className={styles.header}>
         <span>{platformIconMap[platform]}</span>
         <span className={styles.platform}>{platform}</span>

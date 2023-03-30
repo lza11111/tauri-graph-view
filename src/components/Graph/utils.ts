@@ -1,6 +1,7 @@
-import { Graph, Node, Edge, StringExt } from '@antv/x6';
+import { Graph, Node, Edge, StringExt, Cell } from '@antv/x6';
 import dagre from 'dagre';
 import { DATA_LINEAGE_DAG_NODE, NodeData, NodeType, PLATFORM_GROUP_NODE, Position } from './definetion';
+import styles from './styles.module.scss';
 
 /**
  * 根据起点初始下游节点的位置信息
@@ -87,12 +88,15 @@ export const createGroup = (
   if (!graph || graph.hasCell(label)) {
     return null;
   }
+  const random = (a: number, b: number) => Math.floor(Math.random() * (b - a + 1) + a);
+  const randomColor = `rgb(${random(120, 255)}, ${random(120, 255)}, ${random(120, 255)})`;
   const node: Node.Metadata = {
     id: label,
     shape: PLATFORM_GROUP_NODE,
     zIndex: 0,
     data: {
       platform: label,
+      color: randomColor,
     }
   };
   return graph.addNode(node);
@@ -185,3 +189,62 @@ export function fitContent(graph: Graph) {
   };
   graph.zoomToFit(zoomOptions);
 }
+
+// 开启边的运行动画
+export const excuteAnimate = (graph: Graph, node?: Node) => {
+  stopAnimate(graph);
+  const setAnimate = (edge: Edge) => {
+    edge.attr('line/strokeDasharray', 5);
+    edge.attr('line/style/animation', `${styles['running-line']} 30s infinite linear`);
+    edge.attr('line/strokeWidth', 2);
+  };
+  const influencedNode: Set<Node> = new Set();
+  const influencedEdge: Set<Edge> = new Set();
+  if (node) {
+    const searchFunc = (cell: Cell, direction: 'in' | 'out') => {
+      if (direction === 'in') {
+        graph.getIncomingEdges(cell)?.forEach((edge) => {
+          influencedNode.add(edge.getSourceNode());
+          influencedNode.add(edge.getTargetNode());
+          influencedEdge.add(edge);
+          setAnimate(edge);
+        });
+      }
+      if (direction === 'out') {
+        graph.getOutgoingEdges(cell)?.forEach((edge) => {
+          influencedNode.add(edge.getSourceNode());
+          influencedNode.add(edge.getTargetNode());
+          influencedEdge.add(edge);
+          setAnimate(edge);
+        });
+      }
+    };
+    graph.searchCell(node, (cell) => searchFunc(cell, 'in'), { incoming: true });
+    graph.searchCell(node, (cell) => searchFunc(cell, 'out'), { outgoing: true });
+  } else {
+    graph.getEdges().forEach((edge) => {
+      setAnimate(edge);
+    });
+  }
+
+  graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).filter(node => !influencedNode.has(node)).forEach((node) => {
+    node.attr('body/opacity', 0.5);
+  });
+
+  graph.getEdges().filter(edge => !influencedEdge.has(edge)).forEach((edge) => {
+    edge.attr('line/opacity', 0.5);
+  });
+};
+
+// 关闭边的动画
+export const stopAnimate = (graph: Graph) => {
+  graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).forEach((node) => {
+    node.attr('body/opacity', 1);
+  });
+  graph.getEdges().forEach((edge) => {
+    edge.attr('line/strokeDasharray', 0);
+    edge.attr('line/style/animation', '');
+    edge.attr('line/opacity', 1);
+    edge.attr('line/strokeWidth', 1);
+  });
+};
