@@ -57,10 +57,47 @@
             background-color: #f6f8fd;
         }
     }
+
+    .ctaLeft {
+        position: absolute;
+        display: flex;
+        height: 2rem;
+        width: 2rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        background-color: rgb(255 255 255);
+        border-width: 1.5px;
+        border-style: solid;
+        border-color: inherit;
+        top: 19px !important;
+        left: -15px !important;
+        z-index: 9999 !important;
+    }
+
+    .ctaRight {
+        position: absolute;
+        display: flex;
+        height: 2rem;
+        width: 2rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+
+        --tw-bg-opacity: 1;
+
+        background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+        border-width: 1.5px;
+        border-style: solid;
+        border-color: inherit;
+        top: 19px !important;
+        right: -15px !important;
+        z-index: 9999 !important;
+    }
 }
 
 .platform-group {
-    border: 2px solid var(--primary-color);;
+    border: 2px solid var(--primary-color);
     background-color: rgb(225 228 234 / 90%);
     border-radius: 5px;
     height: 100%;

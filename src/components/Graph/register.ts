@@ -8,15 +8,19 @@ register({
   width: 180,
   height: 112,
   component: DataLineageNode,
-  // port默认不可见
   ports: {
     groups: {
       in: {
-        position: 'left',
+        position: {
+          name: 'left',
+          args: {
+            dy: -20,
+          }
+        },
         attrs: {
           circle: {
             r: 4,
-            magnet: true,
+            magnet: false,
             stroke: 'transparent',
             strokeWidth: 1,
             fill: 'transparent',
@@ -28,14 +32,14 @@ register({
         position: {
           name: 'right',
           args: {
-            dx: -32,
+            dy: -20,
           },
         },
 
         attrs: {
           circle: {
             r: 4,
-            magnet: true,
+            magnet: false,
             stroke: 'transparent',
             strokeWidth: 1,
             fill: 'transparent',
@@ -48,7 +52,7 @@ register({
 
 register({
   shape: PLATFORM_GROUP_NODE,
-  component: PlatformGroupNode
+  component: PlatformGroupNode,
 });
 
 // 注册连线

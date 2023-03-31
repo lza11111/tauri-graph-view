@@ -18,20 +18,18 @@ export function SearchComponent<T>(props: ISearchComponentProps<T>) {
   const [searchName, setSearchName] = useState<string>('');
 
   useEffect(() => {
-    if(graph) {
+    if (graph) {
       graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE).forEach((node) => {
         node.attr("body/border", "");
       });
-      if (Object.values(filterOptions).length && Object.values(filterOptions).every(str => str.length > 0)) {
+      if (Object.values(filterOptions).length) {
         Object.entries(filterOptions).reduce<Node[]>((prev, curr) => {
-          return prev.filter((node) => node.getData()[curr[0]]?.toString().toLowerCase().indexOf(curr[1].toLowerCase()) !== -1);
+          return prev.filter((node) => curr[1].length === 0 || node.getData()[curr[0]]?.toString().toLowerCase() === curr[1].toLowerCase());
         }, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE)).forEach((node) => {
           node.attr("body/border", "2px solid red");
         });
       }
     }
-    
-    
   }, [filterOptions]);
 
   const popoverContent = useMemo(() => (

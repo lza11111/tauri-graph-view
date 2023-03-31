@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import classnames from 'classnames';
+import { Modal } from 'antd';
+import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
+import { ReactNodeProps } from './definetion';
 
 import styles from './styles.module.scss';
-import { ReactNodeProps } from './definetion';
-import { Modal } from 'antd';
 
 const platformIconMap = {
   "Geneva": '📚',
@@ -19,7 +20,18 @@ export function DataLineageNode(props: ReactNodeProps) {
   const attr = node?.getAttrs();
   const { name, platform, type } = data;
 
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleLeftCollapse = () => {
+    setLeftCollapsed(!leftCollapsed);
+  };
+
+  const handleRightCollapse = () => {
+    setRightCollapsed(!rightCollapsed);
+  };
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -48,6 +60,13 @@ export function DataLineageNode(props: ReactNodeProps) {
           </div>
         </div>
       </div>
+      <div className={styles.ctaLeft} onClick={handleLeftCollapse}>
+        {leftCollapsed ? <PlusOutlined /> : <MinusOutlined />}
+      </div>
+      <div className={styles.ctaRight} onClick={handleRightCollapse}>
+        {rightCollapsed ? <PlusOutlined /> : <MinusOutlined />}
+      </div>
+      
       <Modal title={`View ${name}`} open={isModalOpen} closable onCancel={handleCancel} footer={null}>
         {
           Object.entries(data).map(([key, value]) => (
