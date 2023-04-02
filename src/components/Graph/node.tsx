@@ -26,10 +26,12 @@ export function DataLineageNode(props: ReactNodeProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleLeftCollapse = () => {
+    node.prop('left-collapse', !leftCollapsed);
     setLeftCollapsed(!leftCollapsed);
   };
 
   const handleRightCollapse = () => {
+    node.prop('right-collapse', !rightCollapsed);
     setRightCollapsed(!rightCollapsed);
   };
 

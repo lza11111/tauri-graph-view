@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Graph } from '@antv/x6';
+import { Graph, Node } from '@antv/x6';
 import { Selection } from '@antv/x6-plugin-selection';
 import { invoke } from '@tauri-apps/api';
 import { SettingOutlined, CompressOutlined, SlidersOutlined, FullscreenOutlined, FileOutlined } from '@ant-design/icons';
@@ -176,6 +176,99 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
           );
         }
       }
+    });
+    graph.on('node:change:visible', ({ node, options }) => {
+      const direction = options.direction;
+      graph.getNodes().forEach((node) => {
+        if (node.getChildren()?.length > 0) {
+          if (node.getChildren().every((node) => node.visible === false)) {
+            node.hide();
+          } else {
+            node.show();
+          }
+        }
+      });
+      if (direction === 'left') {
+        if (node.visible === false) {
+          graph.getEdges().filter((edge) => {
+            return edge.getTargetCell() === node;
+          }).forEach((edge) => edge.hide({ direction: 'left' }));
+        } else {
+          graph.getEdges().filter((edge) => {
+            return edge.getTargetCell() === node;
+          }).forEach((edge) => edge.show({ direction: 'left' }));
+        }
+      }
+      if (direction === 'right') {
+        if (node.visible === false) {
+          graph.getEdges().filter((edge) => {
+            return edge.getSourceCell() === node;
+          }).forEach((edge) => edge.hide({ direction: 'right' }));
+        } else {
+          graph.getEdges().filter((edge) => {
+            return edge.getSourceCell() === node;
+          }).forEach((edge) => {
+            console.log(edge.getSourceCellId(), edge.getTargetCellId());
+            edge.show({ direction: 'right' });
+          });
+        }
+      }
+    });
+    graph.on('edge:change:visible', ({ edge, options }) => {
+      const direction = options.direction;
+      if (direction === 'left') {
+        const node = edge.getSourceCell();
+        if (edge.visible === false) {
+          const allHide = graph.getEdges().filter((edge) => {
+            return edge.getSourceCell() === node;
+          }).every((edge) => edge.visible === false);
+          if (allHide) {
+            node.hide({ direction: 'left' });
+          }
+        } else {
+          node.show({ direction: 'left' });
+        }
+      }
+      if (direction === 'right') {
+        const node = edge.getTargetCell();
+        if (edge.visible === false) {
+          const allHide = graph.getEdges().filter((edge) => {
+            return edge.getTargetCell() === node;
+          }).every((edge) => edge.visible === false);
+          if (allHide) {
+            node.hide({ direction: 'right' });
+          }
+        } else {
+          node.show({ direction: 'right' });
+        }
+      }
+    });
+    graph.on('node:change:left-collapse', ({ node }: { node: Node<Node.Properties> }) => {
+      const value = node.prop('left-collapse');
+      // get node's left edge
+      graph.getEdges().filter((edge) => {
+        return edge.getTargetCell() === node;
+      }).forEach((edge) => {
+        // set edge's visible
+        if (value) {
+          edge.hide({ direction: 'left' });
+        } else {
+          edge.show({ direction: 'left' });
+        }
+      });
+    });
+    graph.on('node:change:right-collapse', ({ node }) => {
+      const value = node.prop('right-collapse');
+      graph.getEdges().filter((edge) => {
+        return edge.getSourceCell() === node;
+      }).forEach((edge) => {
+        // set edge's visible
+        if (value) {
+          edge.hide({ direction: 'right' });
+        } else {
+          edge.show({ direction: 'right' });
+        }
+      });
     });
     graph.use(
       new Selection({

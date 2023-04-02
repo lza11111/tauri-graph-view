@@ -24,7 +24,7 @@ export function SearchComponent<T>(props: ISearchComponentProps<T>) {
       });
       if (Object.values(filterOptions).length) {
         Object.entries(filterOptions).reduce<Node[]>((prev, curr) => {
-          return prev.filter((node) => curr[1].length === 0 || node.getData()[curr[0]]?.toString().toLowerCase() === curr[1].toLowerCase());
+          return prev.filter((node) => node.getData()[curr[0]]?.toString().toLowerCase() === curr[1].toLowerCase());
         }, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE)).forEach((node) => {
           node.attr("body/border", "2px solid red");
         });
