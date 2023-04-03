@@ -51,7 +51,7 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
         },
       },
     });
-    graph.on('node:click', ({ node }) => {
+    graph.on('node:click', ({  node }) => {
       if (node.shape === DATA_LINEAGE_DAG_NODE) {
         excuteAnimate(graph, node);
       }

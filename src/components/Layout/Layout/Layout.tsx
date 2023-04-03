@@ -13,6 +13,7 @@ import defaultProps from './_defaultProps';
 
 import microsoftLogo from '@/assets/microsoft.png';
 import styles from './styles.module.scss';
+import { Divider } from 'antd';
 
 export function Layout(props: React.PropsWithChildren) {
   const { children } = props;
@@ -28,7 +29,7 @@ export function Layout(props: React.PropsWithChildren) {
         <ProLayout
           {...defaultProps}
           className={styles.layout}
-          logo={<img src={microsoftLogo.src} />}
+          logo={<img src={microsoftLogo.src} height={20} />}
           title={false}
           collapsed={false}
           location={{
@@ -48,19 +49,25 @@ export function Layout(props: React.PropsWithChildren) {
               <QuestionCircleFilled key="QuestionCircleFilled" />,
             ];
           }}
-          menuItemRender={(item) => (
-            <div
-              onClick={() => {
-                if (item.path === 'data-assets') {
-                  setPathname(item.path || '/welcome');
-                  Router.push(item.path);
-                }
-              }}
-            >
-              <MenuItem {...item}/>
-            </div>
-          )}
+          menuItemRender={(item) => {
+            if(item.type === 'divider') {
+              return <Divider/>;
+            }
+            return (
+              <div
+                onClick={() => {
+                  if (item.path === 'data-assets') {
+                    setPathname(item.path || '/welcome');
+                    Router.push(item.path);
+                  }
+                }}
+              >
+                <MenuItem {...item} />
+              </div>
+            );
+          }}
           collapsedButtonRender={false}
+          disableMobile
           menuProps={{
             _internalDisableMenuItemTitleTooltip: true,
           }}

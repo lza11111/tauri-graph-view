@@ -22,7 +22,7 @@ export default {
         path: '/data-insights',
         name: 'Insights',
         icon: <img src={DataInsights.src} />,
-      },
+      }
     ],
   },
   location: {
