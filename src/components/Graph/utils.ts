@@ -83,20 +83,18 @@ export const createNode = (
 */
 export const createGroup = (
   graph: Graph,
-  label: string,
+  type: string,
+  groupId: string,
 ) => {
-  if (!graph || graph.hasCell(label)) {
+  if (!graph || graph.hasCell(groupId)) {
     return null;
   }
-  const random = (a: number, b: number) => Math.floor(Math.random() * (b - a + 1) + a);
-  const randomColor = `rgb(${random(120, 255)}, ${random(120, 255)}, ${random(120, 255)})`;
   const node: Node.Metadata = {
-    id: label,
+    id: groupId,
     shape: PLATFORM_GROUP_NODE,
     zIndex: 0,
     data: {
-      platform: label,
-      color: randomColor,
+      platform: type,
     }
   };
   return graph.addNode(node);

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import classnames from 'classnames';
-import { Modal } from 'antd';
+import { Descriptions, Modal } from 'antd';
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons';
 import { ReactNodeProps } from './definetion';
 
@@ -9,6 +9,7 @@ import LensIcon from '@/assets/GA_LensLogo.png';
 import CosmosIcon from '@/assets/azure-icons/10121-icon-service-Azure-Cosmos-DB.svg';
 import KustoIcon from '@/assets/azure-icons/00040-icon-service-Kusto.svg';
 import GenevaIcon from '@/assets/geneva.svg';
+import BlueshiftIcon from '@/assets/blueshift.png';
 
 import styles from './styles.module.scss';
 
@@ -18,11 +19,21 @@ const platformIconMap = {
   "Cosmos": CosmosIcon.src,
   "Lens": LensIcon.src,
   "ADF": DataFactoryIcon.src,
+  "Blueshift": BlueshiftIcon.src
+};
+
+const platformColor = {
+  "Geneva": 'rgb(196, 211, 166)',
+  "Kusto": 'rgb(170, 176, 207)',
+  "Cosmos": 'rgb(219, 161, 141)',
+  "Lens": 'rgb(164, 135, 174)',
+  "ADF": 'rgb(156, 125, 201)',
+  "Blueshift": 'rgb(180, 200, 220)',
 };
 
 export function DataLineageNode(props: ReactNodeProps) {
   const { node } = props;
-  const data = node?.getData();
+  const data = node?.getData<Record<string, string>>();
   const attr = node?.getAttrs();
   const { name, platform, type } = data;
 
@@ -32,7 +43,7 @@ export function DataLineageNode(props: ReactNodeProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if(node.visible) {
+    if (node.visible) {
       setLeftCollapsed(false);
       setRightCollapsed(false);
     }
@@ -54,7 +65,7 @@ export function DataLineageNode(props: ReactNodeProps) {
   const handleCancel = () => {
     setIsModalOpen(false);
   };
-  
+
   return (
     <div className={styles['lineage-node']} style={{ ...attr.body }}>
       <div className={styles.content}>
@@ -80,12 +91,16 @@ export function DataLineageNode(props: ReactNodeProps) {
       <div className={styles.ctaRight} onClick={handleRightCollapse}>
         {rightCollapsed ? <PlusOutlined /> : <MinusOutlined />}
       </div>
-      
+
       <Modal title={`View ${name}`} open={isModalOpen} closable onCancel={handleCancel} footer={null}>
         {
-          Object.entries(data).map(([key, value]) => (
-            <p key={key}>{`${key}: ${value}`}</p>
-          ))
+          <Descriptions size="small" column={1} bordered>
+            {
+              Object.entries(data).map(([key, value]) => (
+                <Descriptions.Item key={key} label={key}>{value}</Descriptions.Item>
+              ))
+            }
+          </Descriptions>
         }
       </Modal>
     </div>
@@ -97,12 +112,12 @@ export function PlatformGroupNode(props: ReactNodeProps) {
   const data = node?.getData();
   const { platform, color } = data;
   const customCSS = {
-    '--primary-color': color,
+    '--primary-color': color ?? platformColor[platform],
   };
   return (
     <div className={styles['platform-group']} style={customCSS as React.CSSProperties}>
       <div className={styles.header}>
-        <span><img src={platformIconMap[platform]}  width={18}/></span>
+        <span><img src={platformIconMap[platform]} width={18} /></span>
         <span className={styles.platform}>{platform}</span>
       </div>
       <div className={styles.body}>

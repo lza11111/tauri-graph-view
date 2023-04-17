@@ -15,6 +15,7 @@ register({
           name: 'left',
           args: {
             dy: -20,
+            dx: -13,
           }
         },
         attrs: {

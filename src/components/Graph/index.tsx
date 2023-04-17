@@ -51,7 +51,7 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
         },
       },
     });
-    graph.on('node:click', ({  node }) => {
+    graph.on('node:click', ({ node }) => {
       if (node.shape === DATA_LINEAGE_DAG_NODE) {
         excuteAnimate(graph, node);
       }
@@ -281,7 +281,7 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
       }),
     );
     data.forEach(element => {
-      const node = createNode(NodeType.DATA, graph, element);
+      createNode(NodeType.DATA, graph, element);
 
       if (element.inputIdList?.length) {
         element.inputIdList.forEach((source) => {
@@ -294,13 +294,30 @@ export default function DataLineageGraph(props: IDataLineageGraphProps) {
           createEdge(element.id ?? element.name, target, graph);
         });
       }
-      let parent = graph.getCellById(element.platform);
-      if (!parent) {
-        parent = createGroup(graph, element.platform);
-      }
-      parent.addChild(node);
     });
     layout(graph, graph.getNodes().filter((node) => node.shape === DATA_LINEAGE_DAG_NODE), graph.getEdges());
+
+    Object.values(graph.getNodes().reduce<Record<number, Node[]>>((map, node) => {
+      if (!map[node.getPosition().x]) {
+        map[node.getPosition().x] = [];
+      }
+      map[node.getPosition().x].push(node);
+      return map;
+    }, {})).forEach((nodes) => {
+      nodes.sort((a, b) => a.getPosition().y - b.getPosition().y);
+      nodes.forEach((node, idx, arr) => {
+        const nodeData = node.getData();
+        let parent: Node;
+        if (idx === 0 || arr[idx - 1].getData().platform != nodeData.platform) {
+          parent = createGroup(graph, nodeData.platform, [nodeData.platform,node.getPosition().x,node.getPosition().y].join('-'));
+        } else {
+          parent = arr[idx - 1].getParent();
+        }
+        
+        parent.addChild(node);
+      });
+    });
+
     setGraphIns(graph);
     fitContent(graph);
     return () => {
